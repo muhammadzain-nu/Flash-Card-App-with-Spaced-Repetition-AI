@@ -1,6 +1,7 @@
 # Simplex
 
 Simplex is a spaced-repetition flashcard app built with React, TypeScript, Tailwind CSS, and Framer Motion. It schedules reviews with the SM-2 algorithm, can generate quiz cards from a deck using the Gemini API, and supports both guest (local-only) and signed-in (Firebase) usage.
+- The URL : https://simplexflashcards.netlify.app/
 
 ## Features
 
