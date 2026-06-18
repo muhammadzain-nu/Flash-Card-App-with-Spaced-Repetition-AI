@@ -1,0 +1,1860 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simplex — Intelligent Spaced Repetition Flashcard System</title>
+  <meta name="description"
+    content="A premium glassmorphic flashcard app featuring the SM-2 algorithm for optimized learning and retention.">
+
+  <!-- Modern Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap"
+    rel="stylesheet">
+
+  <!-- Inline Premium Stylings -->
+  <style>
+    /* ─────────────────────────────────────────────────────────────────────────
+       DESIGN SYSTEM & VARIABLES
+       ───────────────────────────────────────────────────────────────────────── */
+    :root {
+      --bg-primary: #080c14;
+      --bg-surface: rgba(15, 23, 42, 0.45);
+      --bg-glass-hover: rgba(255, 255, 255, 0.05);
+      --border-glass: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(99, 102, 241, 0.6);
+
+      --color-primary: #6366f1;
+      /* Indigo */
+      --color-primary-glow: rgba(99, 102, 241, 0.35);
+      --color-accent: #a855f7;
+      /* Purple */
+      --color-accent-glow: rgba(168, 85, 247, 0.35);
+
+      --color-text-main: #f8fafc;
+      --color-text-muted: #94a3b8;
+
+      /* Quality Button Colors (SM-2 Scale) */
+      --color-again: #ef4444;
+      /* Red */
+      --color-again-glow: rgba(239, 68, 68, 0.25);
+      --color-hard: #f59e0b;
+      /* Amber */
+      --color-hard-glow: rgba(245, 158, 11, 0.25);
+      --color-good: #3b82f6;
+      /* Blue */
+      --color-good-glow: rgba(59, 130, 246, 0.25);
+      --color-easy: #10b981;
+      /* Emerald */
+      --color-easy-glow: rgba(16, 185, 129, 0.25);
+
+      --font-display: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'Fira Code', monospace;
+
+      --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-spring: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    /* Reset & Base Setup */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--color-text-main);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Ambient Blur Blobs */
+    .ambient-blur {
+      position: fixed;
+      width: 40vw;
+      height: 40vw;
+      border-radius: 50%;
+      z-index: -1;
+      filter: blur(100px);
+      opacity: 0.2;
+      pointer-events: none;
+    }
+
+    .blob-1 {
+      top: -10vw;
+      left: -10vw;
+      background: radial-gradient(circle, var(--color-primary) 0%, transparent 70%);
+    }
+
+    .blob-2 {
+      bottom: -10vw;
+      right: -10vw;
+      background: radial-gradient(circle, var(--color-accent) 0%, transparent 70%);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       REUSABLE GLASS CLASSES & UI COMPONENTS
+       ───────────────────────────────────────────────────────────────────────── */
+    .glass-card {
+      background: var(--bg-surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-glass);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      transition: var(--transition-base);
+    }
+
+    .glass-card:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+    }
+
+    .glass-input {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-glass);
+      border-radius: 12px;
+      color: var(--color-text-main);
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      padding: 12px 16px;
+      outline: none;
+      transition: var(--transition-base);
+      width: 100%;
+    }
+
+    .glass-input:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 10px var(--color-primary-glow);
+    }
+
+    .btn-gradient {
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      cursor: pointer;
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      padding: 12px 24px;
+      position: relative;
+      transition: var(--transition-spring);
+      overflow: hidden;
+    }
+
+    .btn-gradient:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-gradient:active {
+      transform: translateY(0);
+    }
+
+    .btn-gradient:disabled {
+      background: #334155;
+      color: #64748b;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-glass {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-glass);
+      border-radius: 12px;
+      color: var(--color-text-main);
+      cursor: pointer;
+      font-family: var(--font-display);
+      font-weight: 500;
+      padding: 12px 20px;
+      transition: var(--transition-base);
+    }
+
+    .btn-glass:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.5);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       HEADER / NAV BAR
+       ───────────────────────────────────────────────────────────────────────── */
+    header {
+      border-bottom: 1px solid var(--border-glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .brand-logo {
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+      border-radius: 10px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    }
+
+    .brand-logo svg {
+      width: 20px;
+      height: 20px;
+      fill: white;
+    }
+
+    .brand-title {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 40%, #c7d2fe 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       LAYOUT MAIN CONTAINER
+       ───────────────────────────────────────────────────────────────────────── */
+    main {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 24px;
+    }
+
+    /* View Switcher Management */
+    .view-section {
+      display: none;
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    .view-section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       VIEW 1: DASHBOARD VIEW
+       ───────────────────────────────────────────────────────────────────────── */
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--color-primary);
+    }
+
+    .stat-card.accent::before {
+      background: var(--color-accent);
+    }
+
+    .stat-card.warning::before {
+      background: var(--color-hard);
+    }
+
+    .stat-card.success::before {
+      background: var(--color-easy);
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--color-text-muted);
+    }
+
+    .stat-val {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--color-text-main);
+    }
+
+    .stat-description {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      margin-top: 4px;
+    }
+
+    /* Section Subheaders */
+    .section-title-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+
+    /* Deck Listing Grid */
+    .deck-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .deck-card {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      min-height: 220px;
+      position: relative;
+    }
+
+    .deck-card-glow {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 120px;
+      height: 120px;
+      background: radial-gradient(circle, var(--color-primary-glow) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .deck-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      z-index: 2;
+    }
+
+    .deck-details {
+      margin-top: auto;
+      z-index: 2;
+    }
+
+    .deck-stats {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-top: 15px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .deck-stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .deck-stat-num {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.15rem;
+    }
+
+    .deck-stat-num.due {
+      color: #fca5a5;
+      text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+    }
+
+    .deck-stat-label {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+    }
+
+    .deck-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .deck-actions button {
+      flex: 1;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      border-radius: 8px;
+    }
+
+    .btn-delete-icon {
+      flex: 0 0 auto !important;
+      width: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       VIEW 2: DECK EDITOR VIEW (CRUD DECK / CARDS)
+       ───────────────────────────────────────────────────────────────────────── */
+    .editor-layout {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 32px;
+    }
+
+    @media(max-width: 900px) {
+      .editor-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .editor-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .editor-main {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .editor-form {
+      padding: 24px;
+    }
+
+    .editor-form h3 {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      margin-bottom: 8px;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .form-actions button {
+      flex: 1;
+    }
+
+    /* Cards Grid/List in Editor */
+    .cards-list-container {
+      padding: 24px;
+      max-height: 700px;
+      overflow-y: auto;
+    }
+
+    .cards-list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border-glass);
+      padding-bottom: 12px;
+    }
+
+    .card-item {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: var(--transition-base);
+    }
+
+    .card-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .card-item-content {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card-content-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .card-content-tag {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--color-primary);
+    }
+
+    .card-content-text {
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .card-item-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.03);
+      padding-top: 8px;
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+    }
+
+    .card-stats-badges {
+      display: flex;
+      gap: 12px;
+    }
+
+    .card-badge {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .card-item-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .card-item-actions button {
+      padding: 6px 12px;
+      font-size: 0.75rem;
+      border-radius: 6px;
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       VIEW 3: STUDY SESSION VIEW (3D FLASHCARD FLIPPING)
+       ───────────────────────────────────────────────────────────────────────── */
+    .study-layout {
+      max-width: 680px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      align-items: center;
+    }
+
+    /* Session Progress Header */
+    .study-progress-bar-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .study-progress-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+      font-weight: 500;
+    }
+
+    .study-progress-track {
+      background: rgba(255, 255, 255, 0.05);
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .study-progress-fill {
+      background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-accent) 100%);
+      height: 100%;
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.3s ease;
+      box-shadow: 0 0 10px var(--color-primary-glow);
+    }
+
+    /* 3D Card Styling */
+    .card-viewport {
+      perspective: 1200px;
+      width: 100%;
+      height: 380px;
+      cursor: pointer;
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .card-viewport.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 24px;
+      padding: 36px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid var(--border-glass);
+      box-shadow: 0 15px 45px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Front side of card */
+    .card-face-front {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.7) 100%);
+      z-index: 2;
+    }
+
+    /* Back side of card */
+    .card-face-back {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(30, 41, 59, 0.7) 100%);
+      transform: rotateY(180deg);
+    }
+
+    /* Card Contents */
+    .card-role-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--color-primary);
+      position: absolute;
+      top: 24px;
+    }
+
+    .card-face-back .card-role-label {
+      color: var(--color-accent);
+    }
+
+    .card-body-text {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 600;
+      line-height: 1.5;
+      text-align: center;
+      max-width: 90%;
+      word-wrap: break-word;
+    }
+
+    .card-hint {
+      position: absolute;
+      bottom: 24px;
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-hint svg {
+      width: 14px;
+      height: 14px;
+      fill: var(--color-text-muted);
+    }
+
+    /* Buttons reveal & scheduling actions */
+    .study-controls {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .quality-buttons-row {
+      display: none;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      width: 100%;
+      animation: slideUp 0.3s ease-out forwards;
+    }
+
+    .quality-buttons-row.active {
+      display: grid;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .btn-quality {
+      border: 1px solid var(--border-glass);
+      border-radius: 16px;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 14px 10px;
+      transition: var(--transition-spring);
+    }
+
+    .btn-quality:hover {
+      transform: translateY(-4px);
+    }
+
+    .btn-quality .q-num {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      opacity: 0.5;
+    }
+
+    .btn-quality .q-name {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .btn-quality .q-interval {
+      font-size: 0.7rem;
+      opacity: 0.7;
+    }
+
+    /* Mapped Quality Themes */
+    .btn-q-again {
+      background: rgba(239, 68, 68, 0.08);
+      border-color: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+    }
+
+    .btn-q-again:hover {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: rgba(239, 68, 68, 0.5);
+      box-shadow: 0 0 15px var(--color-again-glow);
+    }
+
+    .btn-q-hard {
+      background: rgba(245, 158, 11, 0.08);
+      border-color: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+    }
+
+    .btn-q-hard:hover {
+      background: rgba(245, 158, 11, 0.25);
+      border-color: rgba(245, 158, 11, 0.5);
+      box-shadow: 0 0 15px var(--color-hard-glow);
+    }
+
+    .btn-q-good {
+      background: rgba(59, 130, 246, 0.08);
+      border-color: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+    }
+
+    .btn-q-good:hover {
+      background: rgba(59, 130, 246, 0.25);
+      border-color: rgba(59, 130, 246, 0.5);
+      box-shadow: 0 0 15px var(--color-good-glow);
+    }
+
+    .btn-q-easy {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+    }
+
+    .btn-q-easy:hover {
+      background: rgba(16, 185, 129, 0.25);
+      border-color: rgba(16, 185, 129, 0.5);
+      box-shadow: 0 0 15px var(--color-easy-glow);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       VIEW 4: SUMMARY VIEW
+       ───────────────────────────────────────────────────────────────────────── */
+    .summary-card {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 40px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .trophy-glow {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 0 30px rgba(245, 158, 11, 0.4);
+      margin-bottom: 8px;
+    }
+
+    .trophy-glow svg {
+      width: 44px;
+      height: 44px;
+      fill: white;
+    }
+
+    .summary-heading {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 0%, #c7d2fe 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      width: 100%;
+      margin: 12px 0;
+    }
+
+    .summary-stat-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .summary-stat-num {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+
+    .summary-stat-label {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      margin-top: 4px;
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       MODAL BACKDROP DESIGN
+       ───────────────────────────────────────────────────────────────────────── */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: var(--transition-base);
+    }
+
+    .modal-backdrop.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal-window {
+      max-width: 480px;
+      width: 90%;
+      padding: 32px;
+      transform: scale(0.9);
+      transition: var(--transition-spring);
+    }
+
+    .modal-backdrop.active .modal-window {
+      transform: scale(1);
+    }
+
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .modal-desc {
+      font-size: 0.9rem;
+      color: var(--color-text-muted);
+      margin-bottom: 24px;
+      line-height: 1.4;
+    }
+
+    /* Empty states */
+    .empty-state {
+      padding: 40px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      color: var(--color-text-muted);
+    }
+
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      fill: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Footer */
+    footer {
+      max-width: 1200px;
+      margin: 80px auto 40px;
+      padding: 0 24px;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      border-top: 1px solid var(--border-glass);
+      padding-top: 24px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Ambient BG Blobs -->
+  <div class="ambient-blur blob-1"></div>
+  <div class="ambient-blur blob-2"></div>
+
+  <!-- NAVIGATION HEADER -->
+  <header>
+    <div class="header-container">
+      <a href="#" class="brand" id="logo-link">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z" />
+          </svg>
+        </div>
+        <span class="brand-title">Simplex</span>
+      </a>
+
+      <div class="nav-actions">
+        <button class="btn-glass" id="btn-import-trigger">
+          <svg
+            style="width: 16px; height: 16px; fill: currentColor; display: inline-block; vertical-align: middle; margin-right: 6px;"
+            viewBox="0 0 24 24">
+            <path
+              d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
+          </svg>
+          Import / Export
+        </button>
+        <button class="btn-gradient" id="btn-create-deck-trigger">New Deck</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN VIEW CONTAINER -->
+  <main>
+
+    <!-- ───────────────────────────────────────────────────────────────────────
+         VIEW 1: DASHBOARD VIEW
+         ─────────────────────────────────────────────────────────────────────── -->
+    <section id="dashboard-view" class="view-section active">
+
+      <!-- Stats Summary -->
+      <div class="stats-grid">
+        <div class="glass-card stat-card">
+          <div class="stat-label">Total Decks</div>
+          <div class="stat-val" id="stat-decks">0</div>
+          <div class="stat-description">Active learning categories</div>
+        </div>
+        <div class="glass-card stat-card accent">
+          <div class="stat-label">Total Cards</div>
+          <div class="stat-val" id="stat-cards">0</div>
+          <div class="stat-description">Saved flashcard items</div>
+        </div>
+        <div class="glass-card stat-card warning">
+          <div class="stat-label">Due Today</div>
+          <div class="stat-val" id="stat-due">0</div>
+          <div class="stat-description">Cards awaiting review</div>
+        </div>
+        <div class="glass-card stat-card success">
+          <div class="stat-label">Retention Rate</div>
+          <div class="stat-val" id="stat-retention">0%</div>
+          <div class="stat-description">Cards reviewed with interval > 1d</div>
+        </div>
+      </div>
+
+      <!-- Decks Title Bar -->
+      <div class="section-title-bar">
+        <h2 class="section-title">Your Study Decks</h2>
+      </div>
+
+      <!-- Deck Cards Grid -->
+      <div class="deck-grid" id="deck-list-container">
+        <!-- Rendered dynamically -->
+      </div>
+
+    </section>
+
+    <!-- ───────────────────────────────────────────────────────────────────────
+         VIEW 2: DECK EDITOR VIEW (CRUD DECK / CARDS)
+         ─────────────────────────────────────────────────────────────────────── -->
+    <section id="editor-view" class="view-section">
+
+      <!-- breadcrumbs back -->
+      <div style="margin-bottom: 24px;">
+        <button class="btn-glass" id="btn-editor-back" style="padding: 8px 16px; font-size: 0.85rem;">
+          ← Back to Decks
+        </button>
+      </div>
+
+      <div class="editor-layout">
+
+        <!-- Editor Left Column: Add Card Form -->
+        <div class="editor-sidebar">
+          <div class="glass-card editor-form">
+            <h3 id="editor-deck-name-heading">Add Flashcard</h3>
+
+            <form id="card-editor-form">
+              <input type="hidden" id="editor-card-id" value="">
+
+              <div class="form-group">
+                <label for="editor-card-front">Front Side (Question / Prompt)</label>
+                <textarea id="editor-card-front" class="glass-input" rows="4"
+                  placeholder="e.g. What is a CSS closure / pseudo-class?" required></textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="editor-card-back">Back Side (Answer / Explanation)</label>
+                <textarea id="editor-card-back" class="glass-input" rows="4"
+                  placeholder="e.g. A keyword added to a selector that specifies a special state..."
+                  required></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn-gradient" id="btn-save-card">Save Card</button>
+                <button type="button" class="btn-glass" id="btn-cancel-card-edit" style="display:none;">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Editor Right Column: Cards List -->
+        <div class="editor-main">
+          <div class="glass-card cards-list-container">
+            <div class="cards-list-header">
+              <span class="section-title" style="font-size: 1.25rem;">Decks Cards</span>
+              <span id="editor-cards-count" class="card-badge" style="font-size: 0.85rem;">0 Cards</span>
+            </div>
+
+            <div id="cards-list" style="max-height: 520px; overflow-y: auto; padding-right: 6px;">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ───────────────────────────────────────────────────────────────────────
+         VIEW 3: STUDY SESSION VIEW (3D INTERACTIVE CARD)
+         ─────────────────────────────────────────────────────────────────────── -->
+    <section id="study-view" class="view-section">
+
+      <div class="study-layout">
+
+        <!-- Session Progress Track -->
+        <div class="study-progress-bar-container">
+          <div class="study-progress-info">
+            <span id="study-deck-name">Deck Title</span>
+            <span id="study-progress-text">Card 0 of 0</span>
+          </div>
+          <div class="study-progress-track">
+            <div class="study-progress-fill" id="study-progress-indicator"></div>
+          </div>
+        </div>
+
+        <!-- 3D Card Viewport -->
+        <div class="card-viewport" id="study-card-element">
+          <div class="card-inner">
+
+            <!-- Card Front Face -->
+            <div class="card-face card-face-front">
+              <span class="card-role-label">QUESTION</span>
+              <div class="card-body-text" id="study-card-front-text">What is a closure?</div>
+              <div class="card-hint">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+                </svg>
+                Click or flip card to reveal answer
+              </div>
+            </div>
+
+            <!-- Card Back Face -->
+            <div class="card-face card-face-back">
+              <span class="card-role-label">ANSWER</span>
+              <div class="card-body-text" id="study-card-back-text">A closure bundles a function with its lexical scope.
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Interactive Session Controls -->
+        <div class="study-controls">
+          <button class="btn-gradient" id="btn-reveal-answer" style="width: 100%;">Reveal Answer</button>
+
+          <!-- Quality selection mapped to SM-2 scoring -->
+          <div class="quality-buttons-row" id="quality-buttons-panel">
+            <button class="btn-quality btn-q-again" data-quality="0">
+              <span class="q-num">0</span>
+              <span class="q-name">Again</span>
+              <span class="q-interval">Reset</span>
+            </button>
+            <button class="btn-quality btn-q-hard" data-quality="3">
+              <span class="q-num">3</span>
+              <span class="q-name">Hard</span>
+              <span class="q-interval">A bit</span>
+            </button>
+            <button class="btn-quality btn-q-good" data-quality="4">
+              <span class="q-num">4</span>
+              <span class="q-name">Good</span>
+              <span class="q-interval">Later</span>
+            </button>
+            <button class="btn-quality btn-q-easy" data-quality="5">
+              <span class="q-num">5</span>
+              <span class="q-name">Easy</span>
+              <span class="q-interval">Spaced</span>
+            </button>
+          </div>
+
+          <button class="btn-glass btn-danger" id="btn-cancel-session" style="width: 100%;">
+            Exit Session
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ───────────────────────────────────────────────────────────────────────
+         VIEW 4: SUMMARY SESSION VIEW
+         ─────────────────────────────────────────────────────────────────────── -->
+    <section id="summary-view" class="view-section">
+
+      <div class="glass-card summary-card">
+        <div class="trophy-glow">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M18 2H6c-1.1 0-2 .9-2 2v3c0 2.24 1.76 4.09 4 4.42V16c0 1.1.9 2 2 2h2v3H8v2h8v-2h-4v-3h2c1.1 0 2-.9 2-2v-4.58c2.24-.33 4-2.18 4-4.42V4c0-1.1-.9-2-2-2zM6 9V4h2v5c0 .55-.45 1-1 1s-1-.45-1-1zm12 0c0 .55-.45 1-1 1s-1-.45-1-1V4h2v5z" />
+          </svg>
+        </div>
+
+        <h2 class="summary-heading">Review Session Done!</h2>
+        <p style="color: var(--color-text-muted); font-size: 0.95rem;">You completed all the card reviews scheduled for
+          this deck.</p>
+
+        <div class="summary-grid">
+          <div class="summary-stat-box">
+            <div class="summary-stat-num" id="summary-cards-count">0</div>
+            <div class="summary-stat-label">Cards Reviewed</div>
+          </div>
+          <div class="summary-stat-box">
+            <div class="summary-stat-num" id="summary-accuracy">100%</div>
+            <div class="summary-stat-label">Recall Success</div>
+          </div>
+        </div>
+
+        <button class="btn-gradient" id="btn-summary-done" style="width: 100%; margin-top: 12px;">
+          Back to Dashboard
+        </button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ───────────────────────────────────────────────────────────────────────────
+       MODAL 1: CREATE DECK MODAL
+       ─────────────────────────────────────────────────────────────────────────── -->
+  <div class="modal-backdrop" id="modal-create-deck">
+    <div class="glass-card modal-window">
+      <h3 class="modal-title">Create New Deck</h3>
+      <p class="modal-desc">Organise your learning by creating a distinct category (e.g. Algorithms, German Verbs).</p>
+
+      <form id="deck-creation-form">
+        <div class="form-group">
+          <label for="input-deck-name">Deck Name</label>
+          <input type="text" id="input-deck-name" class="glass-input" placeholder="e.g. JavaScript Arrays & Scope"
+            required autocomplete="off">
+        </div>
+
+        <div class="form-actions" style="margin-top: 28px;">
+          <button type="button" class="btn-glass" id="btn-close-create-deck-modal">Cancel</button>
+          <button type="submit" class="btn-gradient">Create Deck</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────────────────────────────────────
+       MODAL 2: IMPORT/EXPORT DATA MODAL
+       ─────────────────────────────────────────────────────────────────────────── -->
+  <div class="modal-backdrop" id="modal-import-export">
+    <div class="glass-card modal-window" style="max-width: 520px;">
+      <h3 class="modal-title">Backup & Restore</h3>
+      <p class="modal-desc">Export your flashcards database to share with others, or import an existing data file.</p>
+
+      <div style="display:flex; flex-direction:column; gap:20px;">
+        <!-- Export Box -->
+        <div
+          style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255,255,255,0.05); padding: 20px; border-radius: 12px;">
+          <h4 style="font-family: var(--font-display); font-size: 1rem; margin-bottom: 8px;">Backup Database</h4>
+          <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 16px;">Download all your decks and
+            flashcard scheduling data as a single JSON file.</p>
+          <button class="btn-gradient" id="btn-export-download"
+            style="width: 100%; padding: 10px 16px; font-size: 0.85rem;">Export JSON Backup</button>
+        </div>
+
+        <!-- Import Box -->
+        <div
+          style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255,255,255,0.05); padding: 20px; border-radius: 12px;">
+          <h4 style="font-family: var(--font-display); font-size: 1rem; margin-bottom: 8px;">Restore Database</h4>
+          <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 16px;">Choose a JSON file from
+            your computer. Note: Existing decks are preserved, duplicates will merge by ID.</p>
+
+          <label class="btn-glass"
+            style="display: block; text-align: center; cursor: pointer; padding: 10px 16px; font-size: 0.85rem; border-style: dashed;">
+            Select JSON File
+            <input type="file" id="file-import-input" accept=".json" style="display: none;">
+          </label>
+        </div>
+      </div>
+
+      <div class="form-actions" style="margin-top: 28px;">
+        <button type="button" class="btn-glass" id="btn-close-import-modal" style="width: 100%;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 AuraCards Spaced Repetition Learning System. Designed with pure CSS & modern JS logic layers.</p>
+  </footer>
+
+  <!-- ───────────────────────────────────────────────────────────────────────────
+       LOGIC SCRIPTS INTEGRATION
+       ─────────────────────────────────────────────────────────────────────────── -->
+  <script src="js/algorithms/sm2.js"></script>
+  <script src="js/modules/studySession.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- Frontend Controller -->
+  <script>
+    // ─────────────────────────────────────────────────────────────────────────
+    // 1. DATA SEEDING & SETUP
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function seedSampleData() {
+      // Check if local storage already has data
+      const existing = localStorage.getItem(STORAGE_KEY);
+      if (existing) {
+        try {
+          const parsed = JSON.parse(existing);
+          if (parsed.decks && parsed.decks.length > 0) {
+            return; // Already populated
+          }
+        } catch (e) { }
+      }
+
+      console.log("[AuraCards] Seeding beautiful sample flashcards for testing...");
+
+      // Let's create two standard decks
+      const deck1 = addDeck("🚀 JavaScript Masterclass");
+      const deck2 = addDeck("🎨 Web Design & UI Aesthetics");
+
+      // Add cards to Deck 1 (JS Basics)
+      const now = new Date();
+
+      // Card 1
+      const c1 = addCard(deck1.id,
+        "What is a Closure in JavaScript?",
+        "A closure is the combination of a function bundled together (enclosed) with references to its surrounding state (the lexical environment). In other words, a closure gives an inner function access to the outer function's scope even after the outer function has returned."
+      );
+
+      // Card 2
+      const c2 = addCard(deck2.id,
+        "What is Glassmorphism and how is it styled in CSS?",
+        "Glassmorphism is a popular modern design style characterized by translucent frosted-glass-like elements. It is achieved in CSS using:\n\n1. background: rgba(255, 255, 255, 0.05);\n2. backdrop-filter: blur(12px) -webkit-backdrop-filter: blur(12px);\n3. border: 1px solid rgba(255, 255, 255, 0.08) to create a subtle glow boundary."
+      );
+
+      // Card 3
+      const c3 = addCard(deck1.id,
+        "What is the difference between let, const, and var?",
+        "• var is function-scoped, hoisted, and permits re-declaration.\n• let is block-scoped, not initialized (Temporal Dead Zone) until defined, and prevents re-declaration.\n• const behaves like let, but forbids re-assignment of the variable identifier (though objects/arrays are still mutable)."
+      );
+
+      // Card 4
+      const c4 = addCard(deck2.id,
+        "Why is the HSL color model preferred for UI systems?",
+        "HSL (Hue, Saturation, Lightness) is highly intuitive because it reflects human perception. \n• Hue (0-360) lets you dial the base color wheel.\n• Saturation (0-100%) controls intensity.\n• Lightness (0-100%) adjusts brightness.\n\nThis makes generating complementary systems or UI color levels (hover states, dark modes) programmatically trivial by just scaling Lightness up/down."
+      );
+
+      // Ensure they are due immediately by forcing scheduling
+      saveToStorage();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 2. VIEW SWITCHER
+    // ─────────────────────────────────────────────────────────────────────────
+
+    let activeDeckId = null;
+    let activeCardEditId = null;
+    let reviewCardsList = [];
+    let reviewedCount = 0;
+    let reviewSuccessCount = 0;
+
+    function switchView(viewId) {
+      document.querySelectorAll('.view-section').forEach(view => {
+        view.classList.remove('active');
+      });
+      document.getElementById(viewId).classList.add('active');
+
+      // Clean up 3D flipped state if shifting away from study
+      if (viewId !== 'study-view') {
+        document.getElementById('study-card-element').classList.remove('flipped');
+        document.getElementById('quality-buttons-panel').classList.remove('active');
+        document.getElementById('btn-reveal-answer').style.display = 'block';
+      }
+
+      // Auto refresh statistics / lists
+      if (viewId === 'dashboard-view') {
+        renderDashboard();
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 3. COMPONENT RENDERING
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function renderDashboard() {
+      // Refresh Stats
+      const stats = getDashboardStats();
+      document.getElementById('stat-decks').textContent = stats.totalDecks;
+      document.getElementById('stat-cards').textContent = stats.totalCards;
+
+      const statDue = document.getElementById('stat-due');
+      statDue.textContent = stats.dueToday;
+      if (stats.dueToday > 0) {
+        statDue.style.textShadow = '0 0 15px rgba(245, 158, 11, 0.5)';
+        statDue.style.color = '#fbbf24';
+      } else {
+        statDue.style.textShadow = 'none';
+        statDue.style.color = 'var(--color-text-main)';
+      }
+
+      document.getElementById('stat-retention').textContent = stats.retentionRate + '%';
+
+      // Render Decks Cards
+      const container = document.getElementById('deck-list-container');
+      container.innerHTML = '';
+
+      if (AppState.decks.length === 0) {
+        container.innerHTML = `
+          <div class="glass-card empty-state" style="grid-column: 1 / -1;">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            <p>No study decks available. Click "New Deck" to build one!</p>
+          </div>`;
+        return;
+      }
+
+      AppState.decks.forEach(deck => {
+        const dueCount = getDueCards(deck.cards).length;
+        const totalCount = deck.cards.length;
+
+        const cardHtml = `
+          <div class="glass-card deck-card" id="deck-card-${deck.id}">
+            <div class="deck-card-glow"></div>
+            <h3 class="deck-title">${escapeHTML(deck.name)}</h3>
+            
+            <div class="deck-details">
+              <div class="deck-stats">
+                <div class="deck-stat-item">
+                  <span class="deck-stat-num">${totalCount}</span>
+                  <span class="deck-stat-label">Total Cards</span>
+                </div>
+                <div class="deck-stat-item">
+                  <span class="deck-stat-num ${dueCount > 0 ? 'due' : ''}">${dueCount}</span>
+                  <span class="deck-stat-label">Due Review</span>
+                </div>
+              </div>
+              
+              <div class="deck-actions">
+                <button class="btn-gradient" onclick="launchStudySession('${deck.id}')" ${dueCount === 0 ? 'disabled' : ''}>
+                  Study Now
+                </button>
+                <button class="btn-glass" onclick="launchDeckEditor('${deck.id}')">
+                  Manage Cards
+                </button>
+                <button class="btn-glass btn-danger btn-delete-icon" onclick="confirmDeleteDeck('${deck.id}')" title="Delete Deck">
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>`;
+        container.insertAdjacentHTML('beforeend', cardHtml);
+      });
+    }
+
+    function renderEditorCards() {
+      const deck = getDeckById(activeDeckId);
+      if (!deck) return;
+
+      document.getElementById('editor-deck-name-heading').textContent = `Manage Cards: ${deck.name}`;
+      document.getElementById('editor-cards-count').textContent = `${deck.cards.length} Cards`;
+
+      const listContainer = document.getElementById('cards-list');
+      listContainer.innerHTML = '';
+
+      if (deck.cards.length === 0) {
+        listContainer.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            <p>No cards in this deck yet. Fill out the left panel to add your first flashcard!</p>
+          </div>`;
+        return;
+      }
+
+      // Reverse chronological display
+      [...deck.cards].reverse().forEach(card => {
+        const dueText = new Date(card.dueDate).toLocaleDateString(undefined, {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        const isOverdue = new Date(card.dueDate) <= new Date();
+
+        const cardItemHtml = `
+          <div class="card-item" id="card-item-${card.id}">
+            <div class="card-item-content">
+              <div class="card-content-block">
+                <span class="card-content-tag">Front</span>
+                <span class="card-content-text">${escapeHTML(card.front).replace(/\n/g, '<br>')}</span>
+              </div>
+              <div class="card-content-block">
+                <span class="card-content-tag" style="color: var(--color-accent);">Back</span>
+                <span class="card-content-text" style="color: #e2e8f0;">${escapeHTML(card.back).replace(/\n/g, '<br>')}</span>
+              </div>
+            </div>
+            
+            <div class="card-item-meta">
+              <div class="card-stats-badges">
+                <span class="card-badge">Int: ${card.interval}d</span>
+                <span class="card-badge">EF: ${card.easeFactor.toFixed(1)}</span>
+                <span class="card-badge" style="${isOverdue ? 'color: #fca7a7; font-weight:600;' : ''}">
+                  Due: ${dueText}
+                </span>
+              </div>
+              
+              <div class="card-item-actions">
+                <button class="btn-glass" style="padding:4px 8px;" onclick="loadCardForEdit('${card.id}')">Edit</button>
+                <button class="btn-glass btn-danger" style="padding:4px 8px;" onclick="confirmDeleteCard('${card.id}')">✕</button>
+              </div>
+            </div>
+          </div>`;
+        listContainer.insertAdjacentHTML('beforeend', cardItemHtml);
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 4. ACTION & CONTROLLER FUNCTIONS
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // Create Deck modal
+    document.getElementById('btn-create-deck-trigger').addEventListener('click', () => {
+      document.getElementById('modal-create-deck').classList.add('active');
+      document.getElementById('input-deck-name').focus();
+    });
+
+    document.getElementById('btn-close-create-deck-modal').addEventListener('click', () => {
+      document.getElementById('modal-create-deck').classList.remove('active');
+      document.getElementById('deck-creation-form').reset();
+    });
+
+    document.getElementById('deck-creation-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('input-deck-name').value;
+      if (name.trim()) {
+        addDeck(name);
+        document.getElementById('modal-create-deck').classList.remove('active');
+        document.getElementById('deck-creation-form').reset();
+        renderDashboard();
+      }
+    });
+
+    function confirmDeleteDeck(deckId) {
+      const deck = getDeckById(deckId);
+      if (!deck) return;
+      if (confirm(`Are you absolutely sure you want to delete the deck "${deck.name}" and all its ${deck.cards.length} cards? This cannot be undone.`)) {
+        deleteDeck(deckId);
+        renderDashboard();
+      }
+    }
+
+    // Launch Deck Editor
+    window.launchDeckEditor = function (deckId) {
+      activeDeckId = deckId;
+      activeCardEditId = null;
+      document.getElementById('card-editor-form').reset();
+      document.getElementById('btn-cancel-card-edit').style.display = 'none';
+      document.getElementById('btn-save-card').textContent = 'Save Card';
+      renderEditorCards();
+      switchView('editor-view');
+    };
+
+    document.getElementById('btn-editor-back').addEventListener('click', () => {
+      switchView('dashboard-view');
+    });
+
+    // Save Card (Add or Edit)
+    document.getElementById('card-editor-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const front = document.getElementById('editor-card-front').value;
+      const back = document.getElementById('editor-card-back').value;
+
+      if (activeCardEditId) {
+        // Edit Card mode
+        editCard(activeDeckId, activeCardEditId, front, back);
+        activeCardEditId = null;
+        document.getElementById('btn-cancel-card-edit').style.display = 'none';
+        document.getElementById('btn-save-card').textContent = 'Save Card';
+      } else {
+        // Add Card mode
+        addCard(activeDeckId, front, back);
+      }
+
+      document.getElementById('card-editor-form').reset();
+      renderEditorCards();
+      renderDashboard();
+    });
+
+    window.loadCardForEdit = function (cardId) {
+      const deck = getDeckById(activeDeckId);
+      if (!deck) return;
+      const card = deck.cards.find(c => c.id === cardId);
+      if (!card) return;
+
+      activeCardEditId = cardId;
+      document.getElementById('editor-card-front').value = card.front;
+      document.getElementById('editor-card-back').value = card.back;
+      document.getElementById('btn-save-card').textContent = 'Update Card';
+      document.getElementById('btn-cancel-card-edit').style.display = 'block';
+      document.getElementById('editor-card-front').focus();
+    };
+
+    document.getElementById('btn-cancel-card-edit').addEventListener('click', () => {
+      activeCardEditId = null;
+      document.getElementById('card-editor-form').reset();
+      document.getElementById('btn-cancel-card-edit').style.display = 'none';
+      document.getElementById('btn-save-card').textContent = 'Save Card';
+    });
+
+    window.confirmDeleteCard = function (cardId) {
+      if (confirm("Delete this flashcard?")) {
+        deleteCard(activeDeckId, cardId);
+        renderEditorCards();
+        renderDashboard();
+      }
+    };
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 5. STUDY WORKFLOWS
+    // ─────────────────────────────────────────────────────────────────────────
+
+    window.launchStudySession = function (deckId) {
+      const session = startStudySession(deckId);
+      if (!session) {
+        alert("No due cards in this deck to study today!");
+        return;
+      }
+
+      reviewedCount = 0;
+      reviewSuccessCount = 0;
+      reviewCardsList = [...session.queue];
+
+      // Refresh Display
+      renderActiveStudyCard();
+      switchView('study-view');
+    };
+
+    function renderActiveStudyCard() {
+      if (!currentSession) return;
+
+      const currentCard = StudySession.getNextCard();
+      if (!currentCard) {
+        // Session complete!
+        finishActiveStudySession();
+        return;
+      }
+
+      // Display card details
+      const viewState = StudySession.showCard(currentCard);
+      document.getElementById('study-deck-name').textContent = viewState.deckName;
+      document.getElementById('study-card-front-text').textContent = viewState.front;
+      document.getElementById('study-card-back-text').textContent = currentCard.back;
+
+      // Queue math
+      const total = currentSession.queue.length;
+      const index = currentSession.queueIndex;
+      document.getElementById('study-progress-text').textContent = `Card ${index + 1} of ${total}`;
+
+      // Update progress fill bar
+      const pct = (index / total) * 100;
+      document.getElementById('study-progress-indicator').style.width = `${pct}%`;
+
+      // Visual components
+      document.getElementById('study-card-element').classList.remove('flipped');
+      document.getElementById('quality-buttons-panel').classList.remove('active');
+      document.getElementById('btn-reveal-answer').style.display = 'block';
+    }
+
+    // Toggle Flip Card
+    const cardEl = document.getElementById('study-card-element');
+    cardEl.addEventListener('click', flipActiveCard);
+    document.getElementById('btn-reveal-answer').addEventListener('click', flipActiveCard);
+
+    function flipActiveCard() {
+      if (!currentSession || currentSession.isFlipped) return;
+
+      handleFlip();
+      cardEl.classList.add('flipped');
+      document.getElementById('btn-reveal-answer').style.display = 'none';
+      document.getElementById('quality-buttons-panel').classList.add('active');
+    }
+
+    // Quality Rating click handler
+    document.querySelectorAll('.btn-quality').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Avoid card click re-triggering
+        const quality = parseInt(btn.getAttribute('data-quality'), 10);
+
+        // Track accuracy for final screen
+        reviewedCount += 1;
+        if (quality >= 3) {
+          reviewSuccessCount += 1;
+        }
+
+        // Apply SM-2 scheduler via integrated app controller
+        handleRate(quality);
+
+        // Advance study UI
+        renderActiveStudyCard();
+      });
+    });
+
+    // Exit study early
+    document.getElementById('btn-cancel-session').addEventListener('click', () => {
+      if (confirm("Are you sure you want to end this study session early? Current ratings will still be saved.")) {
+        endStudySession();
+        switchView('dashboard-view');
+      }
+    });
+
+    // Complete Session
+    function finishActiveStudySession() {
+      const summary = endStudySession();
+      if (!summary) return;
+
+      // Summary Panel Fill
+      document.getElementById('summary-cards-count').textContent = reviewedCount;
+      const accuracy = reviewedCount > 0 ? Math.round((reviewSuccessCount / reviewedCount) * 100) : 100;
+      document.getElementById('summary-accuracy').textContent = accuracy + '%';
+
+      switchView('summary-view');
+    }
+
+    document.getElementById('btn-summary-done').addEventListener('click', () => {
+      switchView('dashboard-view');
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 6. IMPORT / EXPORT BACKUPS
+    // ─────────────────────────────────────────────────────────────────────────
+
+    const importModal = document.getElementById('modal-import-export');
+
+    document.getElementById('btn-import-trigger').addEventListener('click', () => {
+      importModal.classList.add('active');
+    });
+
+    document.getElementById('btn-close-import-modal').addEventListener('click', () => {
+      importModal.classList.remove('active');
+    });
+
+    // Download database JSON
+    document.getElementById('btn-export-download').addEventListener('click', () => {
+      try {
+        const rawJson = exportData();
+        const blob = new Blob([rawJson], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `auracards-backup-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        alert("Failed to export: " + err.message);
+      }
+    });
+
+    // Parse Uploaded JSON file
+    document.getElementById('file-import-input').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        try {
+          importData(evt.target.result);
+          alert("Database successfully restored and merged!");
+          importModal.classList.remove('active');
+          renderDashboard();
+        } catch (err) {
+          alert("Import failed: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // Click Brand Logo Link to return home
+    document.getElementById('logo-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      switchView('dashboard-view');
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 7. UTILITIES
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g,
+        tag => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          "'": '&#39;',
+          '"': '&quot;'
+        }[tag] || tag)
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 8. BOOTSTRAP INITIALIZATION
+    // ─────────────────────────────────────────────────────────────────────────
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // Boot core App
+      initApp();
+
+      // Seed beautiful cards on first load if database is empty
+      seedSampleData();
+
+      // Render components
+      renderDashboard();
+    });
+
+  </script>
+</body>
+
+</html>

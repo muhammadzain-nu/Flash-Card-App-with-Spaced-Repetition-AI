@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simplex — Intelligent Spaced Repetition Flashcard System</title>
+  <meta name="description"
+    content="An elegant and powerful spaced repetition system using the SM-2 algorithm. Optimise your learning with custom flashcard decks.">
+
+  <!-- CSS Styling Layers -->
+  <link rel="stylesheet" href="css/darkmode.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="css/hero.css">
+  <link rel="icon" type="image/png" href="images/Gemini_Generated_Image_xj0pkaxj0pkaxj0p.png">
+  <link rel="shortcut icon" href="images/Gemini_Generated_Image_xj0pkaxj0pkaxj0p.png">
+</head>
+
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════
+       HERO SECTION — Landing / Intro Above the App
+       ═══════════════════════════════════════════════════════════════════════════ -->
+  <section class="hero" id="hero-section" aria-label="Simplex introduction">
+
+    <!-- Left Column: Copy -->
+    <div class="hero__copy">
+      <div class="hero__badge">
+        <span aria-hidden="true">✨</span> Spaced Repetition, Simplified
+      </div>
+
+      <h1 class="hero__headline">
+        Less brute force,<br>
+        more <span class="hero__headline-accent">strategy</span>.
+      </h1>
+
+      <p class="hero__subheading">
+        Master any subject with interactive flashcards powered by the SM-2 algorithm&nbsp;— designed to improve memory
+        and boost retention.
+      </p>
+
+      <div class="hero__cta-group">
+        <button id="hero-cta-get-started" class="hero__cta-primary" aria-label="Get started with Simplex">
+          Get Started <span aria-hidden="true">→</span>
+        </button>
+        <button id="hero-cta-sign-in" class="hero__cta-secondary" aria-label="Sign in to your account">
+          Sign In
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Column: Card Stack -->
+    <div class="hero__visual" aria-label="Interactive flashcard preview">
+      <!-- Background cards (decorative) -->
+      <div class="hero-stack__card hero-stack__card--back-2" aria-hidden="true"></div>
+      <div class="hero-stack__card hero-stack__card--back-1" aria-hidden="true"></div>
+
+      <!-- Interactive flip card (top of stack) -->
+      <div class="hero-flip-scene">
+        <div id="hero-flip-card" class="hero-flip-card" role="button" aria-label="Flip card to reveal login form"
+          tabindex="0">
+          <!-- ─── FRONT FACE ─── -->
+          <div class="hero-flip-card__face hero-flip-card__front">
+            <!-- Header band -->
+            <div class="hero-card-header">
+              <span class="hero-card-header__wordmark">Simplex</span>
+              <span class="hero-card-header__sparkles" aria-hidden="true">✦ ✧</span>
+            </div>
+
+            <!-- Body with tagline -->
+            <div class="hero-card-body">
+              <p class="hero-card-body__tagline">
+                Create, study, and master any subject with interactive flashcards designed to
+                <span class="hero-card-body__highlight">improve memory</span>
+                and <span class="hero-card-body__highlight--pink">boost retention</span>.
+              </p>
+              <!-- Folded corner indicator -->
+              <div class="hero-card-body__fold" aria-hidden="true">
+                <span class="hero-card-body__fold-icon">⤵</span>
+              </div>
+            </div>
+
+            <!-- Footer band -->
+            <div class="hero-card-footer">
+              <span class="hero-card-footer__icon" aria-hidden="true">＋</span>
+              <span class="hero-card-footer__label">Make Your Own Card</span>
+            </div>
+          </div>
+
+          <!-- ─── BACK FACE (Login / Signup) ─── -->
+          <div class="hero-flip-card__face hero-flip-card__back">
+            <div class="hero-login">
+              <div class="hero-login__header">
+                <span id="hero-login-title" class="hero-login__title">Welcome Back</span>
+                <button id="hero-login-back" class="hero-login__back-btn" aria-label="Flip card back to front">
+                  ← Back
+                </button>
+              </div>
+
+              <form id="hero-login-form" class="hero-login__form" autocomplete="off">
+                <div class="hero-login__field">
+                  <label for="hero-email" class="hero-login__label">Email</label>
+                  <input id="hero-email" type="email" class="hero-login__input" placeholder="you@example.com">
+                </div>
+                <div class="hero-login__field">
+                  <label for="hero-password" class="hero-login__label">Password</label>
+                  <input id="hero-password" type="password" class="hero-login__input" placeholder="••••••••">
+                </div>
+                <button id="hero-login-submit" type="submit" class="hero-login__submit">Log In</button>
+              </form>
+
+              <div class="hero-login__footer">
+                <span class="hero-login__toggle">
+                  <span id="hero-login-toggle-text">Don't have an account?</span>
+                  <button id="hero-login-toggle" class="hero-login__toggle-link" type="button">Sign Up</button>
+                </span>
+                <button id="hero-guest-link" class="hero-login__guest" type="button">Continue as Guest →</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Scroll hint -->
+    <div id="hero-scroll-hint" class="hero__scroll-hint" aria-hidden="true">
+      <span>Scroll down</span>
+      <div class="hero__scroll-arrow"></div>
+    </div>
+
+  </section>
+
+  <div class="app-wrapper">
+    <!-- Sidebar navigation drawer -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar__logo">
+        <div class="sidebar__logo-icon">
+          <img src="images/Gemini_Generated_Image_xj0pkaxj0pkaxj0p.png" alt="Simplex logo">
+        </div>
+        <div>
+          <div class="sidebar__logo-text">Simplex</div>
+          <div class="sidebar__logo-sub">Spaced Repetition</div>
+        </div>
+      </div>
+
+      <nav class="sidebar__nav">
+        <button class="nav-item active" data-view="dashboard" aria-label="Go to Dashboard">
+          <span class="nav-icon" aria-hidden="true">📊</span>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-view="decks" aria-label="Go to Decks">
+          <span class="nav-icon" aria-hidden="true">📚</span>
+          <span>My Decks</span>
+        </button>
+        <button class="nav-item" data-view="study" aria-label="Go to Study Session">
+          <span class="nav-icon" aria-hidden="true">🧠</span>
+          <span>Study</span>
+        </button>
+      </nav>
+
+      <div class="sidebar__footer">
+        <!-- Dark Mode Toggle Button -->
+        <button id="dark-mode-toggle" class="toggle-switch" aria-label="Toggle Dark Mode" aria-pressed="false">
+          <span class="toggle-track">
+            <span class="toggle-thumb"></span>
+          </span>
+          <span>Dark Mode</span>
+        </button>
+
+        <!-- Import / Export Actions -->
+        <div style="display: flex; gap: var(--space-2); margin-top: var(--space-2);">
+          <button id="btn-export" class="btn btn-secondary btn-sm" style="flex: 1;" aria-label="Backup data to JSON">
+            📤 Export
+          </button>
+          <label class="btn btn-secondary btn-sm" style="flex: 1; text-align: center; cursor: pointer;"
+            aria-label="Import data from JSON file">
+            📥 Import
+            <input type="file" id="import-file-input" accept=".json" style="display: none;">
+          </label>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Sidebar Responsive Overlay Backdrop -->
+    <div class="sidebar-overlay"></div>
+
+    <!-- Main Workspace Container -->
+    <main class="main-content">
+      <!-- Sticky Top Header Bar -->
+      <header class="top-bar">
+        <div style="display: flex; align-items: center; gap: var(--space-3);">
+          <button id="mobile-menu-btn" class="btn-icon" aria-label="Toggle mobile menu" style="display: none;">
+            ☰
+          </button>
+          <h1 id="page-heading" class="top-bar__title">Dashboard</h1>
+        </div>
+        <div class="top-bar__actions">
+          <button id="btn-new-deck" class="btn btn-primary" aria-label="Create a new study deck">
+            ➕ New Deck
+          </button>
+        </div>
+      </header>
+
+      <!-- Active Content Views -->
+      <section class="page-content">
+
+        <!-- ── VIEW 1: DASHBOARD ── -->
+        <div id="view-dashboard" class="view active">
+          <!-- Quick Statistics Dashboard Panel -->
+          <div class="stat-grid">
+            <div class="stat-card">
+              <span class="stat-card__icon" aria-hidden="true">🗂️</span>
+              <div id="stat-total-decks" class="stat-card__value">0</div>
+              <div class="stat-card__label">Total Decks</div>
+            </div>
+            <div class="stat-card">
+              <span class="stat-card__icon" aria-hidden="true">🃏</span>
+              <div id="stat-total-cards" class="stat-card__value">0</div>
+              <div class="stat-card__label">Total Cards</div>
+            </div>
+            <div class="stat-card">
+              <span class="stat-card__icon" aria-hidden="true">⏳</span>
+              <div id="stat-due-today" class="stat-card__value" style="color: var(--clr-accent);">0</div>
+              <div class="stat-card__label">Due Today</div>
+            </div>
+            <div class="stat-card">
+              <span class="stat-card__icon" aria-hidden="true">📈</span>
+              <div id="stat-retention" class="stat-card__value">0%</div>
+              <div class="stat-card__label">Retention Rate</div>
+            </div>
+          </div>
+
+          <!-- Section title for recent decks -->
+          <div class="section-header">
+            <h2 class="section-title">Recent Decks</h2>
+            <button id="btn-view-all-decks" class="btn btn-secondary btn-sm" aria-label="View all study decks">
+              View All Decks
+            </button>
+          </div>
+
+          <!-- Dynamic Container for Recent Decks -->
+          <div id="dashboard-deck-grid" class="deck-grid" role="list">
+            <!-- Populated dynamically via main.js -->
+          </div>
+        </div>
+
+        <!-- ── VIEW 2: MY DECKS (FULL GRID) ── -->
+        <div id="view-decks" class="view">
+          <div class="section-header">
+            <h2 class="section-title">All Study Decks</h2>
+          </div>
+          <!-- Grid representing all decks -->
+          <div id="all-deck-grid" class="deck-grid" role="list">
+            <!-- Populated dynamically via main.js -->
+          </div>
+        </div>
+
+        <!-- ── VIEW 3: STUDY VIEW SELECTION & SESSION ── -->
+        <div id="view-study" class="view">
+
+          <!-- State A: Select a Deck to study -->
+          <div id="study-picker">
+            <div class="section-header">
+              <h2 class="section-title">Select a Deck to Study</h2>
+            </div>
+            <div id="study-deck-grid" class="deck-grid" role="list">
+              <!-- Rendered dynamically via main.js -->
+            </div>
+          </div>
+
+          <!-- State B: Active Study Session UI -->
+          <div id="study-session-ui" class="study-view" style="display: none;">
+
+            <!-- Progress Bar Tracker -->
+            <div class="study-progress">
+              <div id="progress-track" class="progress-bar-track" role="progressbar" aria-valuenow="0" aria-valuemin="0"
+                aria-valuemax="100" aria-label="Study Session Progress">
+                <div id="progress-bar" class="progress-bar-fill" style="width: 0%;"></div>
+              </div>
+              <span id="progress-label" class="progress-label">0 / 0</span>
+            </div>
+
+            <!-- 3D Flipping Flashcard Viewport -->
+            <div class="flashcard-scene">
+              <button id="flashcard" class="flashcard" aria-label="Flashcard - Click to flip card and reveal answer"
+                tabIndex="0">
+                <!-- Front Side Face -->
+                <div class="flashcard__face flashcard__face--front">
+                  <div class="flashcard__hint flashcard__hint--label">Prompt / Question</div>
+                  <div id="card-front-text" class="flashcard__text">Front card text details...</div>
+                  <div class="flashcard__hint flashcard__hint--helper">
+                    Click card to flip
+                  </div>
+                </div>
+                <!-- Back Side Face (Rotated 180deg) -->
+                <div class="flashcard__face flashcard__face--back">
+                  <div class="flashcard__hint">Recall Explanation</div>
+                  <div id="card-back-text" class="flashcard__text">Back card explanation...</div>
+                </div>
+              </button>
+            </div>
+
+            <!-- Quality Scoring Buttons (SM-2 scale 0-5) -->
+            <div id="rating-buttons" class="rating-buttons hidden">
+              <button id="rate-again" class="rating-btn rating-btn--again"
+                aria-label="Rate recall: Again - Reset interval">
+                <span class="rating-btn__label">Again</span>
+                <span class="rating-btn__sub">Reset</span>
+              </button>
+              <button id="rate-hard" class="rating-btn rating-btn--hard"
+                aria-label="Rate recall: Hard - Study again soon">
+                <span class="rating-btn__label">Hard</span>
+                <span class="rating-btn__sub">A bit</span>
+              </button>
+              <button id="rate-good" class="rating-btn rating-btn--good"
+                aria-label="Rate recall: Good - standard schedule interval">
+                <span class="rating-btn__label">Good</span>
+                <span class="rating-btn__sub">Later</span>
+              </button>
+              <button id="rate-easy" class="rating-btn rating-btn--easy"
+                aria-label="Rate recall: Easy - space out interval further">
+                <span class="rating-btn__label">Easy</span>
+                <span class="rating-btn__sub">Spaced</span>
+              </button>
+            </div>
+
+            <!-- Cancel Review Session Button -->
+            <div style="margin-top: var(--space-6); text-align: center;">
+              <button id="btn-end-session" class="btn btn-secondary btn-sm" aria-label="Exit current study session">
+                Exit Session
+              </button>
+            </div>
+          </div>
+
+          <!-- State C: Session Finished Summary Panel -->
+          <div id="study-complete-ui" class="session-complete" style="display: none;">
+            <div class="session-complete__emoji" aria-hidden="true">🎉</div>
+            <h2 class="session-complete__title">Session Completed!</h2>
+            <p class="session-complete__sub">Good job! You have processed your scheduled cards for this deck.</p>
+
+            <div class="session-stats">
+              <div>
+                <div id="complete-reviewed" class="session-stat__value">0</div>
+                <div class="session-stat__label">Cards Reviewed</div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: center; gap: var(--space-3);">
+              <button id="btn-study-again" class="btn btn-primary" aria-label="Restart review session for this deck">
+                Study Again
+              </button>
+              <button id="btn-back-from-complete" class="btn btn-secondary" aria-label="Return back to Dashboard view">
+                Dashboard
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── VIEW 4: DECK DETAIL (MANAGE CARDS) ── -->
+        <div id="view-deck-detail" class="view">
+          <div class="section-header" style="margin-bottom: var(--space-6);">
+            <div>
+              <button id="btn-back-to-decks" class="btn btn-secondary btn-sm" style="margin-bottom: var(--space-2);"
+                aria-label="Go back to My Decks">
+                ← Back to Decks
+              </button>
+              <h2 id="deck-detail-title" class="section-title">Deck Details</h2>
+            </div>
+            <div style="display: flex; gap: var(--space-2);">
+              <button id="btn-study-this-deck" class="btn btn-primary" aria-label="Study due cards in this deck">
+                🧠 Study Now
+              </button>
+              <button id="btn-add-card" class="btn btn-secondary" aria-label="Create a new flashcard for this deck">
+                ➕ Add Card
+              </button>
+            </div>
+          </div>
+
+          <!-- Flashcard list dynamic grid container -->
+          <div id="card-list" class="card-list" role="list">
+            <!-- Populated dynamically via main.js -->
+          </div>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <!-- ───────────────────────────────────────────────────────────────────────────
+       DIALOG / MODAL STRUCTURES
+       ─────────────────────────────────────────────────────────────────────────── -->
+
+  <!-- Modal 1: Create / Edit Deck -->
+  <div id="modal-deck" class="modal-backdrop">
+    <div class="modal" role="dialog" aria-labelledby="modal-deck-title" aria-modal="true">
+      <div class="modal__header">
+        <h3 id="modal-deck-title" class="modal__title">New Deck</h3>
+        <button id="modal-deck-close" class="btn-icon btn-sm" aria-label="Close modal dialog">✕</button>
+      </div>
+
+      <div class="form-group" style="margin: var(--space-4) 0;">
+        <label for="input-deck-name" class="form-label">Deck Name</label>
+        <input type="text" id="input-deck-name" class="form-input" placeholder="e.g. JavaScript Frameworks" required
+          autocomplete="off">
+      </div>
+
+      <div class="modal__footer">
+        <button id="modal-deck-cancel" class="btn btn-secondary" aria-label="Cancel deck creation">Cancel</button>
+        <button id="modal-deck-save" class="btn btn-primary" aria-label="Save deck updates">Save Deck</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Create / Edit Flashcard -->
+  <div id="modal-card" class="modal-backdrop">
+    <div class="modal" role="dialog" aria-labelledby="modal-card-title" aria-modal="true" style="max-width: 520px;">
+      <div class="modal__header">
+        <h3 id="modal-card-title" class="modal__title">Add Card</h3>
+        <button id="modal-card-close" class="btn-icon btn-sm" aria-label="Close card dialog">✕</button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: var(--space-4); margin: var(--space-4) 0;">
+        <div class="form-group">
+          <label for="input-card-front" class="form-label">Front Side (Question / Prompt)</label>
+          <textarea id="input-card-front" class="form-textarea" placeholder="Enter prompt question..."
+            autocomplete="off" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="input-card-back" class="form-label">Back Side (Answer / Explanation)</label>
+          <textarea id="input-card-back" class="form-textarea" placeholder="Enter explanation answer..."
+            autocomplete="off" required></textarea>
+        </div>
+      </div>
+
+      <div class="modal__footer">
+        <button id="modal-card-cancel" class="btn btn-secondary" aria-label="Cancel card creation">Cancel</button>
+        <button id="modal-card-save" class="btn btn-primary" aria-label="Save card updates">Save Card</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Danger / Action Confirmation Alert -->
+  <div id="modal-confirm" class="modal-backdrop">
+    <div class="modal" role="alertdialog" aria-labelledby="modal-confirm-title" aria-describedby="modal-confirm-body"
+      aria-modal="true" style="max-width: 420px;">
+      <div class="modal__header">
+        <h3 id="modal-confirm-title" class="modal__title">Confirm Action</h3>
+        <button id="modal-confirm-close" class="btn-icon btn-sm" aria-label="Close dialog">✕</button>
+      </div>
+
+      <p id="modal-confirm-body"
+        style="font-size: var(--text-sm); color: var(--clr-text-muted); margin: var(--space-4) 0; line-height: 1.5;">
+        Are you sure you want to perform this action?
+      </p>
+
+      <div class="modal__footer">
+        <button id="modal-confirm-cancel" class="btn btn-secondary" aria-label="Cancel deletion">Cancel</button>
+        <button id="modal-confirm-ok" class="btn btn-danger" aria-label="Confirm permanent deletion">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification System Feed -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- ───────────────────────────────────────────────────────────────────────────
+       LOGIC MODULE INTEGRATION SCRIPTS (DEPENDENCIES FIRST)
+       ─────────────────────────────────────────────────────────────────────────── -->
+  <script src="js/hero.js"></script>
+  <script src="js/sm2.js"></script>
+  <script src="js/studySession.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/darkMode.js"></script>
+  <script src="js/deckManager.js"></script>
+  <script src="js/importExport.js"></script>
+  <script src="js/main.js"></script>
+
+</body>
+
+</html>
